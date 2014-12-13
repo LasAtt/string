@@ -5,6 +5,8 @@
 #include "assert.h"
 #include "string.h"
 
+
+
 void test(std::function<void()> f) {
 	try {
 		f();
@@ -80,7 +82,6 @@ void inserting_char() {
 }
 
 void inserting_string() {
-	assert(!("lel"));
 	String s = "qwerty";
 	s.insert(0, "qwerty");
 	assert(!strcmp(s.get_cstr(), "qwertyqwerty"));
@@ -98,7 +99,9 @@ int main() {
 	test(inserting_char);
 	test(inserting_string);
 
-
+	String s;
+	s = "Hello";
+	std::cout << s << std::endl;
 	/*
 	//Creating strings - required:
 	String str = "C-style string literal"; // is the same as: String str("C-style string literal");

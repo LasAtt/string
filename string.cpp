@@ -3,6 +3,7 @@
 #include <ostream>
 #include <stdexcept>
 #include "string.h"
+#include "assert.h"
 
 
 /**
@@ -38,6 +39,7 @@ String::~String() {
 * Operators
 */
 
+
 String String::operator=(String& other) {
 	sz = other.sz;
 	capacity = other.capacity;
@@ -52,9 +54,24 @@ char& String::operator[](int i) {
 	return str[i];
 }
 
-std::ostream& operator<<(std::ostream& out, String s) {
+std::ostream& operator<<(std::ostream& out, const String s) {
 	out << s.str;
 	return out;
+}
+
+std::istream& operator>>(std::istream& is, String& s) {
+	s.empty();
+	char c;
+	while(is.good()) {
+		is.get(c);
+		if (std::isspace(c, is.getloc())) {
+			s.push_back(0);
+			return is;
+		}
+		s.push_back(c);
+	}
+	s.push_back(0);
+	return is;
 }
 
 /**
@@ -109,9 +126,7 @@ void String::push_back(String s) {
 }
 
 char String::pop_back() {
-	if (sz == 0) {
-		throw std::domain_error("Tried to pop an empty string.");
-	}
+	assert(sz != 0 && "Tried to pop an empty string.");
 	str[sz] = 0;
 	return str[sz--];
 }
@@ -122,9 +137,7 @@ void String::insert(int index, char c) {
 }
 
 void String::insert(int index, String s) {
-	if (index > sz || index < 0) {
-		throw std::domain_error("Inserted out of bounds");
-	}
+	assert((index <= sz && index >= 0) && "Inserted out of bounds");
 
 	char* prev = str;
 	str = new char[npowoftwo(sz + s.sz)];
@@ -138,6 +151,22 @@ void String::insert(int index, String s) {
 		str[i] = prev[k];
 	}
 	delete [] prev;	
+}
+
+void String::empty() {
+	for (int i = 0; i < capacity; i++) {
+		str[i] = 0;
+	}
+	sz = 0;
+}
+
+void String::erase(int index, int n) {
+	assert((index >= 0 && index < sz && n > 0 && n < sz - index) && "Erased with invalid index or number of characters.");
+	int i;
+	for (i = index; i < sz - n; i++)
+		str[i] = str[i + n];
+	for (; i < sz; i++)
+		str[i] = 0;
 }
 
 /**

@@ -6,7 +6,7 @@
 #define assert(X) ((void)(!(X) ? __assert(#X, __FILE__, __func__, __LINE__) : (void)(X)))
 
 extern inline void __assert (const char* msg, const char* file, const char* func, int line) {
-	std::cerr << "assertion: " << msg << "\n\t failed at: " << file << ", " << func <<  "(), line: " << line << std::endl;
+	std::cerr << "assertion: " << msg << "\n  failed at: " << file << ", " << func <<  "(), line: " << line << std::endl;
 	throw std::logic_error("Assertion failed.");
 }
 

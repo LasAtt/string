@@ -2,92 +2,207 @@
 #include <stdexcept>
 #include <cstring>
 #include <functional>
+#include <utility>
+#include <sstream>
 #include "assert.h"
 #include "string.h"
 
-
+int tests = 0;
+int failed_tests = 0;
+const char* func;
 
 void test(std::function<void()> f) {
+	tests++;
 	try {
 		f();
 	} catch (std::logic_error e) {
+		failed_tests++;
+	}
+}
 
+void check_same(const char* result, const char* expected) {
+	try {
+		assert(!strcmp(result, expected));
+	} catch (std::logic_error e) {
+		std::cerr << "  test: " << func << "(); expected: '" << expected << "', was: '" << result << "'" << std::endl; 
+		throw e;
+	}
+}
+
+void check_same(int result, int expected) {
+	try {
+		assert(result == expected);
+	} catch (std::logic_error e) {
+		std::cerr << "  test: " << func << "(); expected: '" << expected << "', was: '" << result << "'" << std::endl; 
+		throw e;
+	}
+}
+
+void check_same(char result, char expected) {
+	try {
+		assert(result == expected);
+	} catch (std::logic_error e) {
+		std::cerr << "  test: " << func << "(); expected: '" << "', was: '" << result << "'" << std::endl; 
+		throw e;
 	}
 }
 
 void default_constructor() {
+	func = __func__;
+
 	String s;
-	assert(s.size() == 0);
-	assert(s.get_capacity() == 2);
-	const char* c = s.get_cstr();
-	assert(c[0] == 0);
+	check_same(s.size(), 0);
+	check_same(s.get_capacity(), 2);
+	check_same(s[0], '\0');
 }
 
 void cstr_constructor() {
+	func = __func__;
+
 	String s("qwerty");
-	assert(s.size() == 6);
-	assert(s.get_capacity() >= 6);
-	assert(!strcmp(s.get_cstr(), "qwerty"));
+	check_same(s.size(), 6);
+	check_same(s.get_capacity(), 8);
+	check_same(s.get_str(), "qwerty");
 }
 
 void string_constructor() {
+	func = __func__;
+
 	String a = "qwerty";
 	String b(a);
-	assert(!strcmp(a.get_cstr(), b.get_cstr()));
+	check_same(a.get_str(), b.get_str());
 }
 
 void initializer_list_constructor() {
+	func = __func__;
+
 	String s = {'q', 'w', 'e', 'r', 't', 'y'};
-	assert(!strcmp(s.get_cstr(), "qwerty"));
+	check_same(s.get_str(), "qwerty");
 }
 
 void access_operator() {
+	func = __func__;
+
 	String s = "qwerty";
-	assert(s[0] == 'q');
+	check_same(s[0], 'q');
 	s[0] = 'o';
-	assert(s[0] == 'o');
+	check_same(s[0], 'o');
 }
 
 void iterating() {
+	func = __func__;
+
 	const char* c = "qwerty";
 	String s = c;
 	int i = 0;
-	for (auto it = s.begin(); it != s.end(); it++, i++) {
-		assert(c[i] == *it);
-	}
+	for (auto it = s.begin(); it != s.end(); it++, i++)
+		check_same(c[i], *it);
 }
 
 void pushing_back_char() {
+	func = __func__;
+
 	String s = "qwerty";
+
 	s.push_back('!');
-	size_t sz = s.size(); const char* cstr = s.get_cstr();
-	assert(sz == 7);
-	assert(s[sz - 1] == '!');
+	check_same(s.size(), 7);
+	check_same(s[s.size() - 1], '!');
 }
 
 void pushing_back_string() {
+	func = __func__;
+
 	String a = "qwerty";
 	String b(a);
+
 	a.push_back(b);
-	assert(!strcmp(a.get_cstr(), "qwertyqwerty"));
-	assert(a.size() == 12);
-	assert(a.get_capacity() == 16);
+	check_same(a.get_str(), "qwertyqwerty");
+	check_same(a.size(), 12);
+	check_same(a.get_capacity(), 16);
 }
 
 void inserting_char() {
+	func = __func__;
+
 	String s = "qwerty";
+
 	s.insert(0, 'p');
-	assert(s[0] == 'p');
-	assert(!strcmp(s.get_cstr(), "pqwerty"));
+	check_same(s[0], 'p');
+	check_same(s.get_str(), "pqwerty");
+
+	s.insert(3, 'p');
+	check_same(s[3], 'p');
+	check_same(s.get_str(), "pqwperty");
 }
 
 void inserting_string() {
+	func = __func__;
+
 	String s = "qwerty";
+
 	s.insert(0, "qwerty");
-	assert(!strcmp(s.get_cstr(), "qwertyqwerty"));
+	check_same(s.get_str(), "qwertyqwerty");
+
+	s.insert(3, "qwerty");
+	check_same(s.get_str(), "qweqwertyrtyqwerty");
+}
+
+void erasing() {
+	func = __func__;
+
+	String s = "qwerty";
+
+	s.erase(0, 1);
+	check_same(s.get_str(), "werty");
+
+	s.erase(2, 3);
+	check_same(s.get_str(), "we");
+
+	s.erase(0, 2);
+	check_same(s.get_str(), "");
+}
+
+void swapping() {
+	func = __func__;
+
+	String a = "qwerty";
+	String b = "asd";
+	std::swap(a, b);
+	check_same(a.get_str(), "asd");
+	check_same(b.get_str(), "qwerty");
+}
+
+void moving() {
+	func = __func__;
+
+	String a = "qwerty";
+	String b = std::move(a);
+	check_same(b.get_str(), "qwerty");
+
+	String c(std::move(b));
+	check_same(c.get_str(), "qwerty");
+
+	check_same(a.get_str(), "");
+	check_same(b.get_str(), "");
+}
+
+void iostreaming() {
+	func = __func__;
+
+	std::stringstream a, b;
+	String s;
+
+	a << "qwerty";
+	a >> s;
+	check_same(s.get_str(), "qwerty");
+
+	b << s;
+	b >> s;
+	check_same(s.get_str(), "qwerty");
 }
 
 int main() {
+	std::cout << "running tests..." << std::endl;
 	test(default_constructor);
 	test(cstr_constructor);
 	test(string_constructor);
@@ -98,57 +213,9 @@ int main() {
 	test(pushing_back_string);
 	test(inserting_char);
 	test(inserting_string);
-
-	String s;
-	s = "Hello";
-	std::cout << s << std::endl;
-	/*
-	//Creating strings - required:
-	String str = "C-style string literal"; // is the same as: String str("C-style string literal");
-
-
-	String str_2(str);
-	String str_3;
-	// //Optional - not required:
-	String str_4 = { 'H','e','l','l','o' }; // list initializer construction
-	// // Using strings
-	// // access and modify:
-	char ch = str[0]; // ch == 'C'
-	str[0] = 'T';     // str[0] == 'T'
-	cout << str.size() << endl; // prints: 22
-
-	for (auto it = str.begin();it != str.end();++it)  // prints: T-style string literal
-		cout << *it;
-	str.push_back('!'); // str == String("T-style string literal!")
-	str.push_back(" == ");
-	str.push_back(str_4);
-	char last = str.pop_back(); // last == '!'
-	str.insert(0,'A');   // str_2 == String("AT-style string literal")
-	str_3.insert(0,str_2); // str_3 == String("AT-style string literal")
-	str_3.insert(str_3.size() - 1," another literal");  //str_3 == String("AT-style string literal another literal")
-	str_3.erase(1,3); //str_3 == String("Atyle string literal another literal")
-	str.swap(str_3);  // swap the contents with str_3
-
-	// stream output and input
-	std::cout << str_3;
-	String input_str;
-	std::cin >> input_str;
-
-	// type conversions 
-	// Required: const char* -> String
-	void f(String s) 
-	{
-	 //...
-	}
-
-	f("a literal");  // implicit conversion from const char* 
-
-	// Optional - not required: String -> char*  (C-style 0-terminated string)
-	//
-	String str_5 = "temporary";
-	char* c_str = str_5.to_C_string();  // return a copy of the contents in a char array allocated with new[]
-	strcmp("temporary",c_str);  // a standard C-function: char* values expected
-	delete c_str;    // callers responsibility to delete the char array
-	c_str = nullptr;
-	*/
+	test(erasing);
+	test(swapping);
+	test(moving);
+	test(iostreaming);
+	std::cout << "finished; " << failed_tests << '/' << tests << " tests failed" << std::endl;
 }
